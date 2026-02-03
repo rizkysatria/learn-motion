@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hand Motion Tracking</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+    }
+    video, canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas"></canvas>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  // posisi object
+  let objX = canvas.width / 2;
+  let objY = canvas.height / 2;
+
+  // DEBUG: gerak pakai mouse
+  canvas.addEventListener("mousemove", (e) => {
+    objX = e.clientX;
+    objY = e.clientY;
+  });
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // background debug
+    ctx.fillStyle = "#222";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // object
+    ctx.beginPath();
+    ctx.arc(objX, objY, 30, 0, Math.PI * 2);
+    ctx.fillStyle = "lime";
+    ctx.fill();
+
+    // text debug
+    ctx.fillStyle = "white";
+    ctx.font = "16px monospace";
+    ctx.fillText("DEBUG MODE: Object should be visible", 20, 30);
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+</script>
+</body>
+</html>
