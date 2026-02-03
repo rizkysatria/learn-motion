@@ -47,8 +47,7 @@
 
   // MediaPipe
   const hands = new Hands({
-    locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+    solutionPath: "https://cdn.jsdelivr.net/npm/@mediapipe/hands"
   });
 
   hands.setOptions({
