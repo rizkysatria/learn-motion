@@ -36,8 +36,8 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let objX = (1 - index.x) * canvas.width;
-let objY = index.y * canvas.height;
+let objX = canvas.width/2;
+let objY = canvas.height/2;
 
 const vision = await FilesetResolver.forVisionTasks(
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
@@ -64,8 +64,8 @@ function detect(){
 
   if(results.landmarks.length>0){
     const index = results.landmarks[0][8];
-    objX = index.x*canvas.width;
-    objY = index.y*canvas.height;
+    objX = (1 - index.x) * canvas.width;
+    objY = index.y * canvas.height;
   }
 
   draw();
