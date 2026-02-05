@@ -38,6 +38,8 @@ canvas.height = window.innerHeight;
 
 let objX = canvas.width/2;
 let objY = canvas.height/2;
+let scale = 1;
+let targetScale = 1;
 
 const vision = await FilesetResolver.forVisionTasks(
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
@@ -60,13 +62,35 @@ video.onloadeddata = () => {
 };
 
 function detect(){
-  const results = handLandmarker.detectForVideo(video,performance.now());
 
-  if(results.landmarks.length>0){
+  const results = handLandmarker.detectForVideo(video, performance.now());
+
+  if(results.landmarks.length > 0){
+
     const index = results.landmarks[0][8];
     objX = (1 - index.x) * canvas.width;
     objY = index.y * canvas.height;
-  }
+
+    const thumb = results.landmarks[0][4];
+
+    const dx = thumb.x - index.x;
+    const dy = thumb.y - index.y;
+    const pinchDistance = Math.sqrt(dx*dx + dy*dy);
+
+    const minPinch = 0.02;
+    const maxPinch = 0.20;
+
+    let normalized = (pinchDistance - minPinch) / (maxPinch - minPinch);
+    normalized = Math.max(0, Math.min(1, normalized));
+
+    if(normalized < 0.05){
+      targetScale = 0.1;
+    }
+
+    targetScale = normalized * 2;
+    scale += (targetScale - scale) * 0.15;
+}
+
 
   draw();
   requestAnimationFrame(detect);
@@ -77,7 +101,7 @@ function draw(){
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   ctx.beginPath();
-  ctx.arc(objX,objY,30,0,Math.PI*2);
+  ctx.arc(objX,objY,30 * scale,0,Math.PI*2);  
   ctx.fillStyle="#00ff88";
   ctx.fill();
 }
