@@ -36,8 +36,8 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let objX = canvas.width/2;
-let objY = canvas.height/2;
+let objX = (1 - index.x) * canvas.width;
+let objY = index.y * canvas.height;
 
 const vision = await FilesetResolver.forVisionTasks(
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
