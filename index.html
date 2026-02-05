@@ -85,8 +85,15 @@ function detect(){
     targetScale = normalized * 2;
 
     // smoothing biar cinematic
-    scale += (targetScale - scale) * 0.15;
+    const stiffness = 0.12;   // kekuatan tarik
+    const damping   = 0.75;   // redam goyangan
 
+    let force = (targetScale - scale) * stiffness;
+
+    scaleVelocity += force;
+    scaleVelocity *= damping;
+
+    scale += scaleVelocity;
     console.log(pinchDistance)
   }
 
