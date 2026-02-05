@@ -1,102 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Hand Motion Tracking</title>
-  <style>
-  body {
-    margin: 0;
-    overflow: hidden;
-    background: black;
-  }
-  canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 10;
-  }
-  video {
-    display: none; /* kamera disembunyiin */
-  }
+<meta charset="UTF-8">
+<style>
+body {
+  margin:0;
+  background:black;
+  overflow:hidden;
+}
+canvas {
+  position:absolute;
+  top:0;
+  left:0;
+}
+video {
+  display:none;
+}
 </style>
 </head>
 <body>
 
-<video id="video" autoplay playsinline style="display:none"></video>
+<video id="video" autoplay playsinline></video>
 <canvas id="canvas"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
-<script>
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
-  const video = document.getElementById("video");
 
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener("resize", resize);
+<script type="module">
+import {
+  HandLandmarker,
+  FilesetResolver
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
 
-  let objX = canvas.width / 2;
-  let objY = canvas.height / 2;
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-  const smooth = 0.25;
-  let targetX = objX;
-  let targetY = objY;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-  // MediaPipe
-  const hands = new Hands({
-    locateFile: (file) => {
-        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`;
-    }
-  });
+let objX = canvas.width/2;
+let objY = canvas.height/2;
 
-  hands.setOptions({
-    maxNumHands: 1,
-    minDetectionConfidence: 0.6,
-    minTrackingConfidence: 0.6,
-  });
+const vision = await FilesetResolver.forVisionTasks(
+  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+);
 
-  hands.onResults((results) => {
-  console.log("hands results:", results);
-
-  if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-    const index = results.multiHandLandmarks[0][8];
-    targetX = index.x * canvas.width;
-    targetY = index.y * canvas.height;
-  }
+const handLandmarker = await HandLandmarker.createFromOptions(vision,{
+  baseOptions:{
+    modelAssetPath:
+    "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task"
+  },
+  runningMode:"VIDEO",
+  numHands:1
 });
 
-  const camera = new Camera(video, {
-    onFrame: async () => {
-      await hands.send({ image: video });
-    },
-    width: 640,
-    height: 480,
-  });
+const stream = await navigator.mediaDevices.getUserMedia({video:true});
+video.srcObject = stream;
 
-  camera.start();
+video.onloadeddata = () => {
+  detect();
+};
 
-  function draw() {
-    // background gelap
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+function detect(){
+  const results = handLandmarker.detectForVideo(video,performance.now());
 
-    // smoothing movement
-    objX += (targetX - objX) * smooth;
-    objY += (targetY - objY) * smooth;
-
-    // object
-    ctx.beginPath();
-    ctx.arc(objX, objY, 30, 0, Math.PI * 2);
-    ctx.fillStyle = "#00ff88";
-    ctx.fill();
-
-    requestAnimationFrame(draw);
+  if(results.landmarks.length>0){
+    const index = results.landmarks[0][8];
+    objX = index.x*canvas.width;
+    objY = index.y*canvas.height;
   }
 
   draw();
+  requestAnimationFrame(detect);
+}
+
+function draw(){
+  ctx.fillStyle="black";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.beginPath();
+  ctx.arc(objX,objY,30,0,Math.PI*2);
+  ctx.fillStyle="#00ff88";
+  ctx.fill();
+}
 </script>
 
 </body>
