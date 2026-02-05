@@ -32,6 +32,7 @@ import {
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const MIN_SCALE = 0.4;
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -40,6 +41,7 @@ let objX = canvas.width/2;
 let objY = canvas.height/2;
 let scale = 1;
 let targetScale = 1;
+let isGrabbing = false; 
 
 const vision = await FilesetResolver.forVisionTasks(
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
@@ -69,8 +71,10 @@ function detect(){
 
     // ===== FOLLOW TANGAN (MIRROR) =====
     const index = results.landmarks[0][8];
-    objX = (1 - index.x) * canvas.width;
-    objY = index.y * canvas.height;
+    if(isGrabbing){
+      objX = (1 - index.x) * canvas.width;
+      objY = index.y * canvas.height;
+    }
 
     // ===== PINCH SCALE =====
     const thumb = results.landmarks[0][4];
@@ -79,10 +83,19 @@ function detect(){
     const dy = thumb.y - index.y;
     const pinchDistance = Math.sqrt(dx*dx + dy*dy);
 
-    let normalized = (pinchDistance - 0.01) / (0.15 - 0.01);
-    normalized = Math.max(0, Math.min(1, normalized));
+    const GRAB_THRESHOLD = 0.035;
 
-    targetScale = normalized * 2;
+    if(pinchDistance < GRAB_THRESHOLD){
+      isGrabbing = true;
+    }else{
+      isGrabbing = false; 
+    }
+
+    let normalized = (pinchDistance - 0.01) / (0.15 - 0.01);
+    // cuma limit bawah, atas bebas
+    normalized = Math.max(0, normalized);
+    // tanpa max limit
+    targetScale = Math.max(MIN_SCALE, normalized * 6);
 
     // smoothing biar cinematic
     const stiffness = 0.12;   // kekuatan tarik
