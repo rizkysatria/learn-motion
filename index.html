@@ -42,6 +42,7 @@ let objY = canvas.height/2;
 let scale = 1;
 let targetScale = 1;
 let isGrabbing = false; 
+let scaleVelocity = 0; 
 
 const vision = await FilesetResolver.forVisionTasks(
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
